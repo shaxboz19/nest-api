@@ -37,7 +37,7 @@ export class ProductController {
     return product;
   }
 
-  @Get('test')
+  @Get('test/test')
   async getTest() {
     return 'test';
   }
