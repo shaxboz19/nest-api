@@ -37,11 +37,6 @@ export class ProductController {
     return product;
   }
 
-  @Get('test/test')
-  async getTest() {
-    return 'test';
-  }
-
   @Delete(':id')
   @HttpCode(204)
   async delete(@Param('id', IdValidationPipe) id: string) {
