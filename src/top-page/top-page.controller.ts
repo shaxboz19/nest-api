@@ -4,41 +4,67 @@ import {
   Delete,
   Get,
   HttpCode,
+  NotFoundException,
   Param,
   Patch,
   Post,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { IdValidationPipe } from 'src/pipes/id-validation.pipe';
+import { createTopPageDto } from './dto/create-top-page.dto';
 import { FindTopPageDto } from './dto/find-top-page.dto';
-import { TopPageModel } from './top-page.model';
+import { TOP_PAGE_NOT_FOUND } from './top-page.constants';
+import { TopPageService } from './top-page.service';
 
 @Controller('top-page')
 export class TopPageController {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly TopPageService: TopPageService) {}
 
-  @Get('get/:alias')
-  async get(@Param('alias') alias: string): Promise<TopPageModel> {
-    return this.configService.get('DB_URL');
+  @UsePipes(new ValidationPipe())
+  @Post('create')
+  async create(@Body() dto: createTopPageDto) {
+    return await this.TopPageService.create(dto);
   }
 
-  @Post('find')
-  async getByCategory(@Body() dto: FindTopPageDto) {
-    return 'test';
+  @Get(':id')
+  async get(@Param('id', IdValidationPipe) id: string) {
+    const topPage = await this.TopPageService.getById(id);
+    if (!topPage) {
+      throw new NotFoundException(TOP_PAGE_NOT_FOUND);
+    }
+    return topPage;
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return 'test';
+  @HttpCode(204)
+  async delete(@Param('id', IdValidationPipe) id: string) {
+    const topPage = await this.TopPageService.delete(id);
+    if (!topPage) {
+      throw new NotFoundException(TOP_PAGE_NOT_FOUND);
+    }
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: TopPageModel) {
-    return 'test';
+  async update(
+    @Param('id', IdValidationPipe) id: string,
+    @Body() dto: createTopPageDto,
+  ) {
+    const topPage = await this.TopPageService.updateById(id, dto);
+    if (!topPage) {
+      throw new NotFoundException(TOP_PAGE_NOT_FOUND);
+    }
+    return topPage;
   }
 
   @HttpCode(200)
-  @Post()
+  @Post('findByCategory')
   async find(@Body() dto: FindTopPageDto) {
-    return 'test';
+    return await this.TopPageService.findByCategory(dto);
+  }
+
+  @Get('textSearch/:text')
+  async findByText(@Param('text') text: string) {
+    return await this.TopPageService.findByText(text);
   }
 }

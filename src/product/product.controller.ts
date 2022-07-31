@@ -4,28 +4,65 @@ import {
   Delete,
   Get,
   HttpCode,
+  NotFoundException,
   Param,
   Patch,
   Post,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
-import { FindDto } from './dto/find-product.dto';
-import { ProductModel } from './product.model';
+import { IdValidationPipe } from 'src/pipes/id-validation.pipe';
+import { CreateProductDto } from './dto/create.product';
+import { FindProductDto } from './dto/find-product.dto';
+import { PRODUCT_NOT_FOUND } from './product.constants';
+import { ProductService } from './product.service';
+import { Product } from './schemas/product.schema';
 
 @Controller('product')
 export class ProductController {
+  constructor(private readonly ProductService: ProductService) {}
+
+  @UsePipes(new ValidationPipe())
   @Post('create')
-  async create(@Body() dto: Omit<ProductModel, '_id'>) {}
+  async create(@Body() dto: CreateProductDto) {
+    return await this.ProductService.create(dto);
+  }
 
   @Get(':id')
-  async get(@Param('id') id: string) {}
+  async get(@Param('id', IdValidationPipe) id: string) {
+    const product = await this.ProductService.findById(id);
+    if (!product) {
+      throw new NotFoundException(PRODUCT_NOT_FOUND);
+    }
+    return product;
+  }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {}
+  @HttpCode(204)
+  async delete(@Param('id', IdValidationPipe) id: string) {
+    const product = await this.ProductService.delete(id);
+    if (!product) {
+      throw new NotFoundException(PRODUCT_NOT_FOUND);
+    }
+  }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: ProductModel) {}
+  async update(
+    @Param('id', IdValidationPipe) id: string,
+    @Body() dto: Product,
+  ) {
+    const product = await this.ProductService.updateById(id, dto);
 
+    if (!product) {
+      throw new NotFoundException(PRODUCT_NOT_FOUND);
+    }
+    return product;
+  }
+
+  @UsePipes(new ValidationPipe())
   @HttpCode(200)
-  @Post()
-  async find(@Body() dto: FindDto) {}
+  @Post('find')
+  async find(@Body() dto: FindProductDto) {
+    return await this.ProductService.findWithReviews(dto);
+  }
 }
