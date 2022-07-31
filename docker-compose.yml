@@ -3,7 +3,7 @@ version: "2.4"
 services:
   api:
     build: ./
-    image: localhost/nestapi
+    image: shaxboz99/nestapi:latest
     env_file: .env
     ports:
       - 3000:3000
