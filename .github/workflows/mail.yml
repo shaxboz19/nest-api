@@ -24,11 +24,3 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/nestapi:latest
-      - name: Publish to registy
-        uses: elgohr/Publish-Docker-Github-Action@master
-        with:
-          registry: docker.pkg.github.com
-          name: docker.pkg.github.com/shaxboz19/nest-api/nest-api
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          tags: 'develop'
